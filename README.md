@@ -8,6 +8,13 @@
 <h3>Training Sets</h3>
 <p>Training and test sets will be included where possible in .csv format</p>
 
+<h3>Dependancies</h3>
+
+<ul>
+<li>Numpy</li>
+<li>Scipy</li>
+</ul>
+
 
 
 
