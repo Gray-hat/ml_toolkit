@@ -15,6 +15,12 @@
 <li>Scipy</li>
 </ul>
 
+<h3>Completed Algorithms</h3>
+<ul>
+	<li>K Nearest Neighbours</li>
+
+</ul>
+
 
 
 
