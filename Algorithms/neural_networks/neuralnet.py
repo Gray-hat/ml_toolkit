@@ -327,21 +327,21 @@ if __name__ == '__main__':
 	#remove the data lables
 	labels = training_set.pop(0)
 	
-	neuron = NeuralNetwork(training_set, 0, 0.1, 0.1)
+	neuron = NeuralNetwork(training_set, 1, 0.1, 0.2)
 	print(neuron.weights)
 	neuron.output_weights()
 	print(neuron.normalized)
 	neuron.iterate()
-	neuron.test()
+	#neuron.test()
 
 #backprop
 
-	# neuron = NeuralNetwork(training_set, 2, 0.1, 0.1, bias = 0, hidden_layer = 2)
+	# neuron = NeuralNetwork(training_set, 2, 0.1, 0.8, bias = 0, hidden_layer = 2)
 	# print(neuron.weights)
 	# neuron.output_weights()
 	# print(neuron.normalized)
 	# neuron.iterate()
-	# neuron.test()
+	# #neuron.test()
 
 #plot graph
 ylim([-1, 1])
