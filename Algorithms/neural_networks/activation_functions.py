@@ -8,9 +8,9 @@ def sigmoid_function(v):
 		'''
 		if  isinstance(v,np.matrixlib.defmatrix.matrix):
 			for x in np.nditer(v, op_flags = ['readwrite']):
-				x[...] = (1 / (1 + math.exp(-x)))
+				x[...] = round((1 / (1 + math.exp(-(x)))),2)
 			return v
-		return (1 / (1 + math.exp(-v)))
+		return (1 / (1 + math.exp(-(v))))
 
 def threshold_function(threshold, v):
 	'''
@@ -20,14 +20,14 @@ def threshold_function(threshold, v):
 	if  isinstance(v,np.matrixlib.defmatrix.matrix):
 			for x in np.nditer(v, op_flags = ['readwrite']):
 				if x >= threshold:
-					x[...] = 1
+					x[...] = 2
 				else:
-					x[...] = 0
+					x[...] = 1
 			return v
 	if v >= threshold:
-		return 1
+		return 2
 	else:
-		return 0
+		return 1
 
 def line_equation(v):
 	'''The equation of a line y = mx + c '''

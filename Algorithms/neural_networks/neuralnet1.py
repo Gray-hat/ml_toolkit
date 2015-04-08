@@ -20,7 +20,7 @@ class NeuralNetwork():
 		Backpropagation is used as a default on neural networks with hidden layers 
 		otherwise the perceptron or adaline is chosen.
 	'''
-	def __init__(self, data_set, algorithm, tolerance, learning_rate, bias = 1, threshold = 0.5, hidden_layer = False):
+	def __init__(self, data_set, algorithm, tolerance, learning_rate, bias = 0, threshold = 0.5, hidden_layer = False):
 		#initialize class values
 		self.hidden_layer = hidden_layer #A number showing number of nodes on the hidden layer
 		self.tolerance = tolerance
@@ -33,8 +33,9 @@ class NeuralNetwork():
 		self.threshold = threshold
 		self.test_set = []
 		self.bias = bias
-		self.add_bias()
+		#self.add_bias()
 		self.set_initial_weights()
+
 		self.normalize()
 		self.split_dataset()
 
@@ -45,23 +46,25 @@ class NeuralNetwork():
 		Set the initial weights for the neural networks nodes
 		'''
 		input_size = len(self.data_set[0]) - 1
+		print("len of inputs", input_size)
 
 		if self.hidden_layer and isinstance(self.hidden_layer, int):
 			#create a mapping for node input to respective outputs
 			weights = []
 			#input to hidden layer
 			for i in range(input_size):
-				temp = [round(random.random(),3) for j in range(self.hidden_layer)]
+				temp = [round(random.random(),1) for j in range(self.hidden_layer)]
 				weights.append(temp)
 			self.weights.append(weights)	
 			#hidden layer to output
-			temp = [round(random.random(),3) for i in range(self.hidden_layer)]
+			temp = [round(random.random(),1) for i in range(self.hidden_layer)]
 			self.weights.append(temp)
+			self.weights = [[[0.1, 0.4], [-0.2,0.2]],[0.2,-0.5]]
 
 
 		else:
 			#only the input and output layer exist
-			weights = [round(random.random(),3) for i in range(input_size)]
+			weights = [round(random.random(),1) for i in range(input_size)]
 			self.weights.append(weights)
 			print("The initial weights are:")
 			self.output_weights
@@ -101,14 +104,17 @@ class NeuralNetwork():
 		temp = []
 		#flatten array
 		list(map(lambda x: temp.extend(x),self.data_set))
-		temp = [int(i) for i in temp]
-		largest = float(max(temp))
+		temp = [float(i) for i in temp]
+		largest= float(max(temp))
+		largest = 1
+		self.largest_data = largest
 		self.normalized = list(self.data_set)
 
 		#overide normalize list
 		for i in range(len(self.normalized)):
-			for j in range(len(self.normalized[i])):
-				self.normalized[i][j] = (float(self.normalized[i][j])) / largest
+			for j in range(len(self.normalized[i]) -1):
+				self.normalized[i][j] = round(((float(self.normalized[i][j])) / largest),4)
+			self.normalized[i][j+1] = float(self.normalized[i][j+1])
 
 
 	def iterate(self):
@@ -134,18 +140,21 @@ class NeuralNetwork():
 					weights = np.matrix(self.weights[0]).T
 					product = np.dot(temp, weights)
 
-
 					if self.algorithm ==0:
 						activated = threshold_function(self.threshold, product.item())
 					else:
 						activated = line_equation(product.item())	
+						
 				
 					print("The current weights and model outputs are {0} and {1} respectively".format(weights, activated))
 					
 					error = d_output - activated
-					self.average_errors.append(error)
+					
 					errors.append(error * error)
-					weight_change = temp.T * (self.learning_rate * error) 
+					weight_change = temp.T * (self.learning_rate * error)
+
+					# for mat in np.nditer(weight_change, op_flags = ['readwrite']):
+					# 	mat[...] = round(float(mat),2)
 					print("The models error is {0} and the change in weights is {1}".format(error, weight_change))
 					self.weights = np.matrix(weight_change) + np.matrix(self.weights).T
 					self.weights = self.weights.T
@@ -154,8 +163,10 @@ class NeuralNetwork():
 				print('******************** End of Epoch {0}   ********************'.format(x))
 	
 				average_error = np.mean(errors)
+				self.average_errors.append(average_error)
 				print("The average error is, {0}".format(average_error))
-				if round(average_error,1) <= self.tolerance:
+				#if round(average_error,1) <= self.tolerance:
+				if x >= 10:
 					print("The desired error tolerance has been achieved.")
 					print("Exiting... ")
 					flag = False
@@ -190,10 +201,10 @@ class NeuralNetwork():
 				print("The inputs to the network are {0} and the desired output is {1}".format(inputs, d_output))
 
 				input_0 = np.matrix(inputs)
-				output_0 = sigmoid_function(input_0)
+				output_0 = line_equation(input_0)
 				print("The outputs of the input layer are {0}".format(output_0))
 				weights = np.matrix(self.weights[0]).T
-				input_1 = np.dot(weights, input_0.T)
+				input_1 = np.dot(weights, output_0.T)
 				print("The inputs of the hidden layer are {0}".format(input_1))
 				output_1 = sigmoid_function(input_1)
 				print("The outputs of the hidden layer are {0}.".format(output_1))
@@ -203,37 +214,46 @@ class NeuralNetwork():
 				print("The output to the output layer is {0}".format(output_2))
 
 				error = d_output - output_2
-				self.average_errors.append(error)
 				errors.append(error * error)
 
 				#calculate weight for the second weights
 
 				d = (d_output - output_2) * output_2 * (1 - output_2)
+				
+
 				weight_change_w = self.learning_rate * d * output_1
+
 
 				#calculate weights for the first weights
 
 				w = np.matrix(self.weights[1]).T * d
+
+
 				a, b, g, h = (w[0].item(), w[1].item(), output_1[0].item(), output_1[1].item())
 
 				weight_change_v = [[a * g * (1 - g)],[b * h * (1 - h)]]
 				weight_change_v = np.matrix(weight_change_v).T
+
 				#update weights
 				print("Updating weights.......")
 
 				self.weights[0] = ((output_0.T * weight_change_v) * self.learning_rate) + self.weights[0]
-
-
+			
 				self.weights[1] = np.matrix(self.weights[1]).T + weight_change_w
+
 				self.weights[1] = self.weights[1].T
 
 				print("The updated weights are:")
 				self.output_weights()
+				
+
 			print('******************** End of Epoch {0}   ********************'.format(x))
 
 			average_error = np.mean(errors)
+			self.average_errors.append(average_error)
 			print("The average error is, {0}".format(average_error))
-			if round(average_error, 4) <= self.tolerance:
+			#if round(average_error, 4) <= self.tolerance:
+			if x >= 3000:
 				print("The desired error tolerance has been achieved.")
 				print("Exiting... ")
 				flag = False
@@ -247,7 +267,7 @@ class NeuralNetwork():
 		the standards'''
 		#true class
 		class_p = 1
-		class_n = 0
+		class_n = 2
 
 		tp = 0
 		fn = 0
@@ -259,7 +279,7 @@ class NeuralNetwork():
 		for data in self.test_set[0]:
 			#loop thru each data input
 			inputs = data[:-1]
-			d_output = data[-1:][0]
+			d_output = data[-1:][0] 
 			print("The inputs to the network are {0} and the desired output is {1}".format(inputs, d_output))
 
 			if self.algorithm == 0 or self.algorithm == 1:
@@ -279,7 +299,7 @@ class NeuralNetwork():
 				output_0 = line_equation(input_0)
 				print("The outputs of the input layer are {0}".format(output_0))
 				weights = np.matrix(self.weights[0]).T
-				input_1 = np.dot(weights, input_0.T)
+				input_1 = np.dot(weights, output_0.T)
 				print("The inputs of the hidden layer are {0}".format(input_1))
 				output_1 = sigmoid_function(input_1)
 				print("The outputs of the hidden layer are {0}.".format(output_1))
@@ -288,13 +308,13 @@ class NeuralNetwork():
 				m_output = sigmoid_function(input_2.item())
 				print("The output to the output layer is {0}".format(m_output))	
 
-			if m_output == d_output == class_p:
+			if round(m_output,3) == d_output == class_p:
 				tp += 1
-			elif m_output == d_output == class_n:
+			elif round(m_output,3) == d_output == class_n:
 				tn += 1
-			elif m_output == class_p and d_output == class_n:
+			elif round(m_output,3) == class_p and d_output == class_n:
 				fp += 1
-			elif m_output == class_n and d_output == class_p:
+			elif round(m_output,3) == class_n and d_output == class_p:
 				fn += 1	
 			else:
 				print("An error has occured")			
@@ -311,13 +331,59 @@ class NeuralNetwork():
 		print("The precision is: {0}".format(precision))
 		print("The F-score is: {0}".format(f_score))
 
+	def test_data(self):
+		'''Test data from a data file'''
+		print("*******************************TESTDATA*************************")
+		inputs = []
+		inputs = [0.2, 0.4]
+		# for i in input_file:
+		# 	inputs.append(round((float(i)/self.largest_data), 4))
+
+		d_output = 0.25
+
+		if self.algorithm == 0 or self.algorithm == 1:
+			print("The inputs to the network are {0} and the desired output is {1}".format(inputs, d_output))
+
+			temp = np.matrix(inputs)
+			weights = np.matrix(self.weights[0]).T
+			print(temp,weights)
+			product = np.dot(temp, weights)
+
+			if self.algorithm ==0:
+				activated = threshold_function(self.threshold, product.item())
+			else:
+				activated = line_equation(product.item())	
+				
+		
+			print("The current weights and model outputs are {0} and {1} respectively".format(weights, activated))
+
+		else:
+			#backprop
+			#loop thru each data input
+
+			print("The inputs to the network are {0} and the desired output is {1}".format(inputs, d_output))
+
+			input_0 = np.matrix(inputs)
+			output_0 = sigmoid_function(input_0)
+			print("The outputs of the input layer are {0}".format(output_0))
+			weights = np.matrix(self.weights[0]).T
+			input_1 = np.dot(weights, input_0.T)
+			print("The inputs of the hidden layer are {0}".format(input_1))
+			output_1 = sigmoid_function(input_1)
+			print("The outputs of the hidden layer are {0}.".format(output_1))
+			input_2 = np.dot(self.weights[1], output_1)
+			print("The input to the output layer is {0}".format(input_2))
+			output_2 = sigmoid_function(input_2.item())
+			print("The output to the output layer is {0}".format(output_2))
+
+
 
 
 if __name__ == '__main__':
 
 	#location containing the training set
 	location = os.path.dirname(os.path.abspath(__file__))
-	training_set_location = os.path.join(location, 'extras/files/training_set1.csv')
+	training_set_location = os.path.join(location, 'extras/files/training_set2.csv')
 
 	#read training data
 	training_set = read_csv(training_set_location)
@@ -325,19 +391,21 @@ if __name__ == '__main__':
 	#remove the data lables
 	labels = training_set.pop(0)
 	
-	# neuron = NeuralNetwork(training_set, 1, 0.1, 0.1)
+	# neuron = NeuralNetwork(training_set, 1, 0.1, 0.6)
 	# neuron.output_weights()
 	# neuron.iterate()
-	# #neuron.test()
+	# neuron.test()
+	# neuron.test_data()
 
 #backprop
 
-	neuron = NeuralNetwork(training_set, 2, 0.1, 0.2, bias = 0, hidden_layer = 2)
-	print(neuron.weights)
+	neuron = NeuralNetwork(training_set, 2, 0.1, 0.6, bias = 0, hidden_layer = 2)
+	#print(neuron.weights)
 	neuron.output_weights()
-	print(neuron.normalized)
+	#print(neuron.normalized)
 	neuron.iterate()
 	#neuron.test()
+	neuron.test_data()
 
 #plot graph
 fig = figure()
@@ -348,7 +416,7 @@ ax.set_title('Line graph to show average error')
 ax.set_xlabel('Iterations')
 ax.set_ylabel('Error')
 
-ylim([-1,1])
+ylim([0, 0.2])
 line1, = ax.plot(neuron.average_errors,label="Average Error", linestyle='--')
 # Create a legend for the first line.
 first_legend = legend(handles=[line1], loc=1)

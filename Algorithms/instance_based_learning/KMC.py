@@ -6,7 +6,10 @@ import os
 import random
 
 #external library imports
+import matplotlib.pyplot as plt
+import numpy as np
 from scipy.spatial.distance import euclidean
+
 
 #package specific imports
 from extras.utils.helpers import read_csv
@@ -121,6 +124,7 @@ if __name__ == '__main__':
 
 	#read training data
 	training_set = read_csv(training_set_location)
+	print(training_set)
 
 	#get the labels
 	labels = training_set.pop(0)
@@ -169,5 +173,28 @@ if __name__ == '__main__':
 			break	
 			
 
-#use group matrix to print out the clusters
+#scatter plot
+fig = plt.figure()
+ax1 = fig.add_subplot(111)
+colors = ['blue', 'green', 'magenta', 'cyan']
+counter = 0
+for point in points:
+	x = []
+	y = []
+	for p in point:
+		x.append(int(p[1]))
+		y.append(int(p[2]))
+	x = np.array(x)
+	y = np.array(y)
+
+	ax1.scatter(x, y, color=colors[counter], s=50, edgecolor='none')
+	counter += 1
+	#ax1.set_aspect(1./ax1.get_data_ratio())
+
+plt.ylim([0, 20])
+
+plt.show()
+
+
+
 

@@ -12,7 +12,7 @@ def read_csv(location):
 	'''
 	data_set = []
 	with open(location, 'r') as csv_file:
-		data = csv.reader(csv_file, delimiter = ',')
+		data = csv.reader(csv_file, delimiter = ' ')
 		for row in data:
 			data_set.append(row)
 
